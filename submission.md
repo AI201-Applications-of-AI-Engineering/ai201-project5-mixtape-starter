@@ -98,6 +98,52 @@ Scenario 3: User adds a song to a playlist
 
 Tackling:
 
-Issue #1
-Issue #3
-Issue #4
+Issue #1: My listening streak keeps resetting
+Reported by: kenji
+
+I listen to something on Mixtape every single day — I haven't missed a day in weeks. On Saturday night my streak was at 12. Sunday morning I played a song like always, checked my profile, and my streak said 1. This is the second time it's happened, and both times it was a Sunday. Listening again on Monday bumped it to 2, so it's counting again — it just threw away my whole streak.
+
+Steps I took:
+
+Listened to a song every calendar day, including Saturday.
+Listened again Sunday morning and checked my streak (GET /users/<my_id>/streak).
+Expected: streak goes from 12 to 13 — I listened on consecutive days. Actual: streak shows 1, as if I'd skipped a day.
+
+Issue #3: The same song keeps showing up twice in search
+Reported by: simone
+
+When I search, some songs come back two or even three times — identical entries, same song. I searched "Anthem" and Crown Heights Anthem by Borough Kings showed up three times in the results. Other songs only show up once. Nothing about the duplicates looks different; it's just the same result repeated.
+
+Steps I took:
+
+Searched for a song (GET /songs/search?q=Anthem).
+Counted the results.
+Expected: each matching song appears exactly once. Actual: some songs appear once, others two or three times, for a single-song match.
+
+Issue #4: I got notified when a friend added my song to a playlist but not when they rated it
+
+Reported by: aaliya
+
+Notifications work when someone adds a song I shared to a playlist — I get "kenji added your song…" right away. But when kenji rated one of my songs (he showed me, 5 stars), I never got a notification. No delay, just nothing, and there's nothing in my notification list (GET /users/<my_id>/notifications) either. Ratings notifications seem to just not happen, for anyone I've asked.
+
+Steps I took:
+
+Had a friend add my shared song to a playlist → notification arrived. ✅
+Had the same friend rate a different song I shared (POST /songs/<song_id>/rate) → checked my notifications.
+Expected: a notification for the rating, same as for the playlist add. Actual: rating is saved (it shows on the song), but no notification is ever created.
+
+# Issue 1
+
+## How I reproduced it
+
+In order to verify that the bug existed, I asked Claude to help build a Python script that will get what I needed. Specifically, because we know that Sunday is when the bug occurs, I had the script incorporate all 7 days of the week, and utilize the function listening_streak to grab the streak. Using the current day as the input, and a sample user, I was able to reproduce the bug, and found, like the user said, only Sunday reseted the streak to 1.
+
+# Issue 3
+
+## How I reproduced it
+To see the 3 rows when searching a song, I asked Claude to help me with generating a Python script that can test what simone experienced. Using "Anthem" as the query, I checked the database to see how many rows it returned for the name, and it returned 3, while the actual number of songs remained 1.
+
+# Issue 4
+
+## How I reproduced it
+Like before, I asked Claude to help me replicate the environment in which the bug occurred with the user. Using a sample rater, we tested a before and after rating, where we got the notification count before the rating, and the notification count after the rating. Because it remained the same, we were able to find the bug was actually there.
