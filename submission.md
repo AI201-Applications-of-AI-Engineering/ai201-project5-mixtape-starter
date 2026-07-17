@@ -1,3 +1,6 @@
+# AI Usage Section
+    Throughout this project, I utilized AI to help me summarize the files. 
+
 # models.py:
     - contains 7 SQLAlchemy models
         - User
@@ -225,14 +228,16 @@ Here, I didn't know exactly how to read it, so I asked Claude to simplify it for
 I removed .outerjoin call completely. Because the call was unncessary, removing it solved the issue. The goal of .outerjoin was suppose to separate the tags, but because song.to_dict() solved that issue anyways by loading the tags. 
 
 ## Issue number and title
-
-## How you reproduced it 
+Issue 4: I got notified when a friend added my song to a playlist but not when they rated it
+### How you reproduced it 
 <!-- What steps did you take to confirm the bug exists before touching any code? What inputs, sequence of actions, or data condition triggered the behavior? -->
-
-## How you found the root cause
+Like before, I created a Python script that created a song, sharer_id, and rater. We tested the notification count before the test, and after giving a rating, tested the count after the test. Both the numbers stayed the same, which means the user was never notified.
+### How you found the root cause
 <!-- Which files did you look at? What was your navigation path? What moment made you confident you'd found the right place — not just a suspicious area, but the specific cause? -->
+To figure out where the issue was, I checked the Python script created by Claude. In it, since the notification didn't change before and after the rate_song() function, we went in there. Furthermore, in the user's bug report, it said add_to_playlist worked, but not rate_song. This meant that the bug was in rate_song, and the correct fix is similiar to what we have in add_to_playlist.
 
-## The root cause
+### The root cause
 <!-- In plain English, explain exactly what was wrong. Not "there was a bug in the streak logic" — explain the specific condition, comparison, or missing step that caused the problem. -->
 
 ## Your fix and side-effect check — What did you change and why does that change fix the root cause? What related functionality did you check afterward to confirm you didn't break anything?
+
