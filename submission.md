@@ -1,4 +1,4 @@
-models.py:
+# models.py:
     - contains 7 SQLAlchemy models
         - User
         - Tag
@@ -12,7 +12,7 @@ models.py:
         - song_tags (many-to-many)
         - playlist_entries (many-to-many w/ ordering)
 
-routes/:
+# routes/:
 
 4 thin blueprints, one per domain. Each parses the request, calls a service, and formats the JSON response.
 
@@ -26,7 +26,7 @@ routes/:
     - feed.py
         gets a friends' single most recent song each, or a broader stream of recent friend activities
 
-services/:
+# services/:
 
 Business logic.
 
@@ -69,7 +69,7 @@ Business logic.
         - mark_as_read(notification_id)
 
 
-Data flow trace:
+# Data flow trace
 
 Scenario 1: A friend listens to a song.
 When a friend listens to a song, here's what happens.
@@ -98,7 +98,7 @@ Scenario 3: User adds a song to a playlist
 
 Tackling:
 
-Issue #1: My listening streak keeps resetting
+# Issue #1: My listening streak keeps resetting
 Reported by: kenji
 
 I listen to something on Mixtape every single day — I haven't missed a day in weeks. On Saturday night my streak was at 12. Sunday morning I played a song like always, checked my profile, and my streak said 1. This is the second time it's happened, and both times it was a Sunday. Listening again on Monday bumped it to 2, so it's counting again — it just threw away my whole streak.
@@ -109,7 +109,7 @@ Listened to a song every calendar day, including Saturday.
 Listened again Sunday morning and checked my streak (GET /users/<my_id>/streak).
 Expected: streak goes from 12 to 13 — I listened on consecutive days. Actual: streak shows 1, as if I'd skipped a day.
 
-Issue #3: The same song keeps showing up twice in search
+# Issue #3: The same song keeps showing up twice in search
 Reported by: simone
 
 When I search, some songs come back two or even three times — identical entries, same song. I searched "Anthem" and Crown Heights Anthem by Borough Kings showed up three times in the results. Other songs only show up once. Nothing about the duplicates looks different; it's just the same result repeated.
@@ -120,7 +120,7 @@ Searched for a song (GET /songs/search?q=Anthem).
 Counted the results.
 Expected: each matching song appears exactly once. Actual: some songs appear once, others two or three times, for a single-song match.
 
-Issue #4: I got notified when a friend added my song to a playlist but not when they rated it
+# Issue #4: I got notified when a friend added my song to a playlist but not when they rated it
 
 Reported by: aaliya
 
@@ -193,17 +193,36 @@ with:
 being the root cause. This specific section was not needed to the function, and upon removal, Sunday's bug was fixed. The rest of the test cases also worked as usual, which meant this bug was specifically here.
 
 ## Issue number and title
+Issue #3: The same song keeps showing up twice in search
 
 ## How you reproduced it 
 <!-- What steps did you take to confirm the bug exists before touching any code? What inputs, sequence of actions, or data condition triggered the behavior? -->
+I wrote a Python test script called verify_issue3.py. In the script, I created the app, and created a session where I tested out a search.
 
 ## How you found the root cause
 <!-- Which files did you look at? What was your navigation path? What moment made you confident you'd found the right place — not just a suspicious area, but the specific cause? -->
+I first looked at the same Python script that I've created, and was unable to reverse engineer from there. Afterwards, I asked Claude to help; it said to search the routes instead; specifically, the HTTP path GET /songs/search. From there, I clicked onto routes, and checked songs.py, which had the function search(), and reverse engineered from here.
 
 ## The root cause
 <!-- In plain English, explain exactly what was wrong. Not "there was a bug in the streak logic" — explain the specific condition, comparison, or missing step that caused the problem. -->
+Digging into songs.py, and afterwards into search_songs, we arrive at results.
+
+results = (
+        db.session.query(Song)
+        .outerjoin(song_tags, Song.id == song_tags.c.song_id)
+        .filter(
+            db.or_(
+                Song.title.ilike(f"%{query}%"),
+                Song.artist.ilike(f"%{query}%"),
+            )
+        )
+        .all()
+    )
+
+Here, I didn't know exactly how to read it, so I asked Claude to simplify it for me. Overall, the issue laid in outerjoin(song_tags). This call produces one row per (song, tag) pair. This means that for a song with 3 tags, it produces one per tag, aka 3 rows. There is nothing that bring them back together, and thus they stay as 3 separate calls.
 
 ## Your fix and side-effect check — What did you change and why does that change fix the root cause? What related functionality did you check afterward to confirm you didn't break anything?
+I removed .outerjoin call completely. Because the call was unncessary, removing it solved the issue. The goal of .outerjoin was suppose to separate the tags, but because song.to_dict() solved that issue anyways by loading the tags. 
 
 ## Issue number and title
 
