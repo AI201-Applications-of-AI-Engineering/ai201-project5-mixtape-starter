@@ -147,3 +147,73 @@ To see the 3 rows when searching a song, I asked Claude to help me with generati
 
 ## How I reproduced it
 Like before, I asked Claude to help me replicate the environment in which the bug occurred with the user. Using a sample rater, we tested a before and after rating, where we got the notification count before the rating, and the notification count after the rating. Because it remained the same, we were able to find the bug was actually there.
+
+
+
+# Root Cause Analysis Format
+
+## Issue number and title
+Issue #1 — My listening streak keeps resetting
+
+## How you reproduced it 
+<!-- What steps did you take to confirm the bug exists before touching any code? What inputs, sequence of actions, or data condition triggered the behavior? -->
+To confirm the issue was true, I wrote a Python script (verify_issue1.py) that created a sample user and sample listening day. For each of the 7 days, I updated the date and listening_streak, and printed out what the results showed. The print statements showed that even though all 6 days printed the listening_streak as 13, Sunday was the only one that printed back to 1. 
+## How you found the root cause
+<!-- Which files did you look at? What was your navigation path? What moment made you confident you'd found the right place — not just a suspicious area, but the specific cause? -->
+Because the streaks were fine on 6 of the 7 days and were updated, I visited the one function that updated the streak: update_listening_streak. 
+
+## The root cause
+<!-- In plain English, explain exactly what was wrong. Not "there was a bug in the streak logic" — explain the specific condition, comparison, or missing step that caused the problem. -->
+Reading the script, I noticed that at the last conditional statement, there is an else/if statement with "today.weekday() != 6". This looked like the root cause, since the else statement afterwards set the listening_streak back to 1. The goal of the conditionals was to update the streaks; the first conditional:
+
+if days_since_last == 0:,
+
+checked to make sure that if the days since last listened was 0, then we are finished. The next conditional:
+
+elif days_since_last == 1 and today.weekday() != 6:,
+
+check to see if the days since last listened was 1 AND the weekday wasn't a Sunday.
+
+However, the function never claimed to worry about Sundays and so, this was the core issue.
+
+## Your fix and side-effect check — What did you change and why does that change fix the root cause? What related functionality did you check afterward to confirm you didn't break anything?
+The root cause was:
+
+if days_since_last == 0:
+        # Already updated today — no change needed
+        return
+    elif days_since_last == 1 and today.weekday() != 6:
+        user.listening_streak += 1
+    else:
+        user.listening_streak = 1
+
+with:
+    today.weekday() != 6
+
+being the root cause. This specific section was not needed to the function, and upon removal, Sunday's bug was fixed. The rest of the test cases also worked as usual, which meant this bug was specifically here.
+
+## Issue number and title
+
+## How you reproduced it 
+<!-- What steps did you take to confirm the bug exists before touching any code? What inputs, sequence of actions, or data condition triggered the behavior? -->
+
+## How you found the root cause
+<!-- Which files did you look at? What was your navigation path? What moment made you confident you'd found the right place — not just a suspicious area, but the specific cause? -->
+
+## The root cause
+<!-- In plain English, explain exactly what was wrong. Not "there was a bug in the streak logic" — explain the specific condition, comparison, or missing step that caused the problem. -->
+
+## Your fix and side-effect check — What did you change and why does that change fix the root cause? What related functionality did you check afterward to confirm you didn't break anything?
+
+## Issue number and title
+
+## How you reproduced it 
+<!-- What steps did you take to confirm the bug exists before touching any code? What inputs, sequence of actions, or data condition triggered the behavior? -->
+
+## How you found the root cause
+<!-- Which files did you look at? What was your navigation path? What moment made you confident you'd found the right place — not just a suspicious area, but the specific cause? -->
+
+## The root cause
+<!-- In plain English, explain exactly what was wrong. Not "there was a bug in the streak logic" — explain the specific condition, comparison, or missing step that caused the problem. -->
+
+## Your fix and side-effect check — What did you change and why does that change fix the root cause? What related functionality did you check afterward to confirm you didn't break anything?
