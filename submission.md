@@ -1,3 +1,7 @@
+# Screenshot of 'git log --oneline' at 'bugfix/mixtape'
+<img width="1043" height="139" alt="image" src="https://github.com/user-attachments/assets/f2257dcb-ded2-468b-b493-12b97e2d2797" />
+
+
 # AI Usage Section
     Throughout this project, I utilized AI to help me summarize the files. To learn what the files did, I asked Claude to give me the main files: models.py, routes/, services/, and do a data trace on how the flow would look like. This helped me understand where the interactions are actually happening from the users' end. Though I didn't understand everything completely, I provided my own explanations to what I understood and had it correct me. 
 
