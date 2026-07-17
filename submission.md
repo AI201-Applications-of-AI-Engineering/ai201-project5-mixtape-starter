@@ -1,5 +1,9 @@
 # AI Usage Section
-    Throughout this project, I utilized AI to help me summarize the files. 
+    Throughout this project, I utilized AI to help me summarize the files. To learn what the files did, I asked Claude to give me the main files: models.py, routes/, services/, and do a data trace on how the flow would look like. This helped me understand where the interactions are actually happening from the users' end. Though I didn't understand everything completely, I provided my own explanations to what I understood and had it correct me. 
+
+    After selecting the issues, I once again asked Claude to help me reproduce the bugs, making sure that they exist and that I could visually see them. Once confirmed, I reverse engineered most of the issues, but for Issue #3 which I was unable to reverse engineer, I asked Claude for some gudiance, which pointed me to the /routes and /services folder, and work from here. Once I found the function usage, I was able to reverse engineer from there and find the bug. 
+
+    Overall, I utilized AI to help me understand the file, build a summary of how they work, and once I selected some issues to work on, give me a path on the flow of the program, and fixed the bugs from there. 
 
 # models.py:
     - contains 7 SQLAlchemy models
@@ -238,6 +242,9 @@ To figure out where the issue was, I checked the Python script created by Claude
 
 ### The root cause
 <!-- In plain English, explain exactly what was wrong. Not "there was a bug in the streak logic" — explain the specific condition, comparison, or missing step that caused the problem. -->
+There was no create_notification at all for rate_song, whereas add_to_playlist had a create_notification. Because of this, every time someone added to a playlist, there would be a notification alert, but none for any ratings done on a song.
 
 ## Your fix and side-effect check — What did you change and why does that change fix the root cause? What related functionality did you check afterward to confirm you didn't break anything?
+
+I copied and adjusted the create_notification from add_to_playlist to rate_songs, making sure that it matched the rest of the function. Because of this, the notification actually fires on a song rating. To further test, I made Claude run the sample tests in the test/ folder, and passed all of them. 
 
